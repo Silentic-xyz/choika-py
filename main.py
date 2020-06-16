@@ -37,7 +37,18 @@ class choika(commands.Bot):
         print('imma a choika')
 
 
-
+    async def on_message(self, msg):
+        await self.process_commands(msg)
+        if msg.author.bot:return
+        prefixes=['!','dev$','ext$','stable$','user$',self.prefix,'sct$','..','n.','r.','r/','s?',
+            'z/','+','?','>','d.','f.','j.','nd.','s.','u!','x!','a>',';','.','-',',','cj.','gg!', 'sc$', 'snake$']
+        for i in prefixes:
+            if msg.content.startswith(i): return
+        if random.randint(0,20) == 0:
+            l = await self.read_json('ai.json')
+            l.append(msg.content)
+            await self.write_json('ai.json',l)
+            print('added ', msg.content)
 
 
 

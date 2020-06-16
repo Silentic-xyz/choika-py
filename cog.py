@@ -21,17 +21,7 @@ class Cog(commands.Cog):
         await self.bot.write_json('ai.json',l)
         await ctx.send(await self.bot.read_json('ai.json'))        
 
-    async def on_message(self, msg):
-        if msg.author.bot:return
-        prefixes=['!','dev$','ext$','stable$','user$',self.bot.prefix,'sct$','..','n.','r.','r/','s?',
-            'z/','+','?','>','d.','f.','j.','nd.','s.','u!','x!','a>',';','.','-',',','cj.','gg!', 'sc$', 'snake$']
-        for i in prefixes:
-            if msg.content.startswith(i): return
-        if random.randint(0,20) == 0:
-            l = list(await self.bot.read_json('ai.json'))
-            l.append(msg.content)
-            await self.bot.write_json('ai.json',l)
-            print('added ', msg.content)
+
 
 
 
