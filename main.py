@@ -4,6 +4,7 @@ import json
 import random
 import os
 
+
 class choika(commands.Bot):
     def __init__(self):
         self.prefix = "$"
@@ -26,6 +27,7 @@ class choika(commands.Bot):
         else:
             return member.id == app.owner.id
 
+
     async def on_ready(self):
         self.load_extension("jishaku")
         self.load_extension("cog")
@@ -33,42 +35,65 @@ class choika(commands.Bot):
         print("imma a choika")
 
     async def on_message(self, msg):
+        if (not msg.author.bot and msg.content.startswith(self.user.mention)) or (msg.channel.id == 725983351886053447 and msg.author.id != 707752602049183766): # msg.author.id == 666922244752277504
+            await msg.channel.send(
+                ((await self.get_phrase(msg.content)).replace("@", "@\u200b"))[:2000]
+            )
+            if msg.content in await bot.read_json('ai.json'): return
+            for i in self.config["prefixes"]:
+                if msg.content.startswith(i):
+                    return
+            if random.randint(0, self.config["standart"]) == 0:
+                l = await self.read_json("ai.json")
+                content = msg.content
+                for i in msg.mentions:
+                    content = content.replace(i.mention, i.name)
+                l.append(content)
+                await self.write_json("ai.json", l)
+                print("added ", msg.content)
+                await msg.add_reaction("➕")  
+            return 
+
         await self.process_commands(msg)
         if msg.channel.id not in self.config["licensed"]:
-            return
+            return  # АСТАНАВИТЕСЬ
         if msg.author.bot:
             return
         if msg.mentions:
-            if (
-             msg.content.startswith(msg.mentions[0].mention)
-            and msg.mentions[0].bot
-            ):return
+            if msg.content.startswith(msg.mentions[0].mention) and msg.mentions[0].bot:
+                return
         for i in self.config["prefixes"]:
             if msg.content.startswith(i):
                 return
-        if msg.author.id in (await self.read_json('blocklist.json'))["users"]: return
+        if msg.author.id in (await self.read_json("blocklist.json"))["users"]:
+            return
 
         if random.randint(0, self.config["standart"]) == 0:
             l = await self.read_json("ai.json")
             content = msg.content
             for i in msg.mentions:
-                content = content.replace(i.mention,i.name) 
+                content = content.replace(i.mention, i.name)
             l.append(content)
             await self.write_json("ai.json", l)
             print("added ", msg.content)
             await msg.add_reaction("➕")
 
-    async def on_message_edit(self,before,msg):
-        if not msg.author.guild_permissions.send_messages: return
+    async def get_phrase(self, message):
+        return random.Random(message.__hash__()).choice(await self.read_json("ai.json"))
+
+    async def on_message_edit(self, before, msg):
+        if not msg.author.guild_permissions.send_messages:
+            return
         await self.process_commands(msg)
 
     def restart(self):
-        os.system('python 3.8 main.py')
-        exit
+        os.system("python3 main.py")
+        exit()
+
 
 bot = choika()
 bot.run(
-    "NzA3NzUyNjAyMDQ5MTgzNzY2.Xuj9tw.mWPXih34l-HH8q8l4ZRqcHbG9ug",
+    "NzA3NzUyNjAyMDQ5MTgzNzY2.XvWlPg.09aNl4v_8_n8lIj5VAsWyvzGLJ4",
     bot=True,
     reconnect=True,
 )

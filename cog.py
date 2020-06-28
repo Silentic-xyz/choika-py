@@ -11,9 +11,7 @@ class Cog(commands.Cog):
     async def ai(self, ctx, *, msg):
         embed = discord.Embed(
             color=discord.Colour.gold(),
-            description=random.Random(msg.__hash__()).choice(
-                await self.bot.read_json("ai.json")
-            ),
+            description=await self.bot.get_phrase(msg)
         )
         embed.set_footer(
             text=f"Invoced by {ctx.author.name}", icon_url=ctx.author.avatar_url
@@ -26,14 +24,40 @@ class Cog(commands.Cog):
             print("added ", msg)
             await ctx.message.add_reaction("➕")
 
-    @commands.command(name="force")
-    @commands.is_owner()
-    async def force(self, ctx, *, phrase):
-
+    @commands.command()
+    async def add(self, ctx, *, phrase):
+        cost = len(phrase)*2
+        credit = await self.bot.read_json('credits.json')
+        try: creditUser = credit[str(ctx.author.id)]
+        except KeyError: credit[str(ctx.author.id)] = 0; creditUser = credit[str(ctx.author.id)]
+        if creditUser - cost < 0:
+            await ctx.send(f'> <:emblemerror:723113966678835242> У вас недостаточно средств на счету\n> Для оплаты требуется {cost} монет, вам нехватает {abs(creditUser-cost)} монет')
+            return
+        credit[str(ctx.author.id)] = creditUser - cost
         l = await self.bot.read_json("ai.json")
         l.append(phrase)
+        await self.bot.write_json('credits.json', credit)
         await self.bot.write_json("ai.json", l)
+        stats = await self.bot.read_json('stats.json')
+        stats["used"] += cost
+        await ctx.message.add_reaction('<:checkmark:723113966246690817>')
+
+
+    @commands.command(aliases=['addCredits','addC'])
+    @commands.is_owner()
+    async def addCoins(self,ctx,user: discord.User, howmany:int):
+        l = await self.bot.read_json("credits.json") 
+        try: l[str(user.id)]
+        except KeyError: l[str(user.id)] = 0
+        l[str(user.id)] += howmany
+        await self.bot.write_json("credits.json", l)
+        stats = await self.bot.read_json('stats.json')
+        stats["added"] += howmany
+        await self.bot.write_json('stats.json',stats)
         await ctx.message.add_reaction('✅')
+
+
+
 
     @commands.command(name="remove")
     @commands.is_owner()
@@ -101,5 +125,11 @@ class Cog(commands.Cog):
         await ctx.send(embed=emb)
 
 
+    @commands.command(aliases=['balanceF','balanceS'])
+    async def balance(self,ctx):
+        s = await self.bot.read_json('credits.json')
+        try: s[str(ctx.author.id)]
+        except KeyError: s[str(ctx.author.id)] = 0
+        await ctx.send(f'> Choika Coins: {s[str(ctx.author.id)]}')
 def setup(bot):
     bot.add_cog(Cog(bot))
