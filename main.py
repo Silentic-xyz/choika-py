@@ -9,7 +9,6 @@ class choika(commands.Bot):
     def __init__(self):
         self.prefix = "$"
         super().__init__(commands.when_mentioned_or(self.prefix), case_insensitive=True)
-
         self.remove_command("help")
 
     async def read_json(self, fn: str):
@@ -31,6 +30,7 @@ class choika(commands.Bot):
     async def on_ready(self):
         self.load_extension("jishaku")
         self.load_extension("cog")
+        self.load_extension("debug")
         self.config = await self.read_json("config.json")
         print("imma a choika")
 
@@ -43,6 +43,7 @@ class choika(commands.Bot):
             for i in self.config["prefixes"]:
                 if msg.content.startswith(i):
                     return
+            if msg.content == '': return
             if random.randint(0, self.config["standart"]) == 0:
                 l = await self.read_json("ai.json")
                 content = msg.content
@@ -93,7 +94,7 @@ class choika(commands.Bot):
 
 bot = choika()
 bot.run(
-    "NzA3NzUyNjAyMDQ5MTgzNzY2.XvWlPg.09aNl4v_8_n8lIj5VAsWyvzGLJ4",
+    "TOKEN",
     bot=True,
     reconnect=True,
 )

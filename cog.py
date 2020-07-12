@@ -55,6 +55,24 @@ class Cog(commands.Cog):
         stats["added"] += howmany
         await self.bot.write_json('stats.json',stats)
         await ctx.message.add_reaction('✅')
+        
+        
+    @commands.command(aliases=['send','give'])
+    async def pay(self,ctx,user: discord.User, howmany:int):
+        l = await self.bot.read_json("credits.json")
+        topay = howmany*1.2
+        bal = l[str(ctx.author.id)]
+        if bal - howmany < 0: return await ctx.send('Недостаточно денег (Налоговый сбор 20%)\n'
+                                                                      f'Необходимо ещё {abs(bal-topay)}')
+        try: l[str(user.id)]
+        except KeyError: l[str(user.id)] = 0
+        l[str(user.id)] += howmany
+        l[str(ctx.author.id)] -= topay
+        stats = await self.bot.read_json('stats.json')
+        stats["used"] += topay-howmany
+        await self.bot.write_json('stats.json',stats)
+        await self.bot.write_json("credits.json", l)
+        await ctx.message.add_reaction('✅')
 
 
 
@@ -73,7 +91,7 @@ class Cog(commands.Cog):
     @commands.command(name="help")
     async def thelp(self, ctx):
         embed = discord.Embed(
-            color=discord.Colour.gold(), description="`help`,`$`,`license`,`invite`"
+            color=discord.Colour.gold(), description="`help`,`$`,`license`,`invite`,`pay`,`balance`,`add`"
         )
         embed.set_footer(
             text=f"Invoced by {ctx.author.name}", icon_url=ctx.author.avatar_url
@@ -131,5 +149,40 @@ class Cog(commands.Cog):
         try: s[str(ctx.author.id)]
         except KeyError: s[str(ctx.author.id)] = 0
         await ctx.send(f'> Choika Coins: {s[str(ctx.author.id)]}')
+        
+    @commands.command(aliases=['addcc'])
+    async def add_cc(self,ctx):
+        await ctx.send(f'> Использование: !buy_cc (количество)\n> Требуется Silentic System')
+        
+        
+    
+    @commands.Cog.listener()
+    async def on_message(self,msg: discord.Message):
+        chn = await self.bot.fetch_channel(731886414106591343)
+        bot = await self.bot.fetch_user(666922244752277504)
+        if chn.id != msg.channel.id or bot.id != msg.author.id: return
+        raw = msg.content.split(':')
+        if len(raw) != 2: return await ctx.send('201') 
+        try:
+            int(raw[0])
+            user = await self.bot.fetch_user(raw[0])
+            howmany = int(raw[1])
+        except ValueError: # int('abcd')
+            return await msg.channel.send('201')
+        except discord.errors.NotFound: # Unknown user
+            return await msg.channel.send('202')
+        l = await self.bot.read_json("credits.json") 
+        try: l[str(user.id)]
+        except KeyError: l[str(user.id)] = 0
+        l[str(user.id)] += howmany
+        await self.bot.write_json("credits.json", l)
+        stats = await self.bot.read_json('stats.json')
+        stats["added"] += howmany
+        await self.bot.write_json('stats.json',stats)
+        await msg.channel.send('200')
+
+
+    
+    
 def setup(bot):
     bot.add_cog(Cog(bot))
